@@ -1,0 +1,29 @@
+{
+  "name": "basisconstrucciones-sgi",
+  "version": "1.0.0",
+  "description": "Sistema de gestion integral para Basis Construcciones S.R.L",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomasperezcoscia/BasisConstrucciones-SGI.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tomasperezcoscia/BasisConstrucciones-SGI/issues"
+  },
+  "homepage": "https://github.com/tomasperezcoscia/BasisConstrucciones-SGI#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "morgan": "^1.10.0",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
