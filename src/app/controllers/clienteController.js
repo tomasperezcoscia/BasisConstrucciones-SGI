@@ -118,3 +118,5 @@ class clienteController {
             });
         }
     }
+
+    export default clienteController;

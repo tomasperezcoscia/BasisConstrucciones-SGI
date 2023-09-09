@@ -119,3 +119,5 @@ class TareasController {
         });
     }
 }
+
+export default TareasController;

@@ -128,3 +128,5 @@ class ProovedoresController {
         });
     }
 }
+
+export default ProovedoresController;

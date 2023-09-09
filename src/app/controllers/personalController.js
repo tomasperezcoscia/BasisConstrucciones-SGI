@@ -125,3 +125,5 @@ class PersonalController {
         });
     }
 }
+
+export default PersonalController;

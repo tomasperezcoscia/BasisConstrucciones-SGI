@@ -101,3 +101,5 @@ class insumosController {
         });
     }
 }
+
+export default insumosController;
