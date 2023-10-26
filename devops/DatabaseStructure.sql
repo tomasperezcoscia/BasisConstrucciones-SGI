@@ -1,116 +1,152 @@
+CREATE DATABASE ConstructionDB;
+USE ConstructionDB;
 
-Personal {
-	id integer pk increments
-	legajo integer unique
-	nombre varchar(100)
-	salario_hora integer(8)
-	estado char(1)
-	fechaDeAlta date
-	fechaDeBaja date null
-}
 
-OrdenesDeCompra {
-	id integer pk increments
-	numeroOrdenInterna integer unique
-	cliente_id integer *> Cliente.id
-	numeroOrden integer
-	descripcionTarea varchar null
-	cuit_cuil integer(13)
-	fechaDeIngreso date
-	caracter integer
-	polizaArt integer
-	vencimientoPolizaArt date
-	polizaDeAccPer integer
-	vencimientoPolizaDeAccPer date
-}
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
 
-Cliente {
-	id integer pk increments
-	legajo integer unique
-	nombre varchar(100)
-	tipo varchar(50)
-}
 
-HorasPersonal {
-	id integer pk increments
-	fechaDeCarga date
-	cliente_id integer *> Cliente.id
-	personal_id integer *> Personal.id
-	orden_de_compra_id integer *>* OrdenesDeCompra.id
-	tarea_id integer *> Tareas.id
-}
+-- Personal table
+CREATE TABLE Personal (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    legajo INT UNIQUE,
+    nombre VARCHAR(100),
+    salario_hora INT(8),
+    estado CHAR(1),
+    fechaDeAlta DATE,
+    fechaDeBaja DATE NULL
+);
 
-Proovedores {
-	id integer pk increments
-	legajo integer unique
-	nombre varchar(100) unique
-	numeroDeTelefono integer
-	cuil integer
-	tipo varchar(50)
-	fechaAlta date
-	fechaBaja date null
-}
+-- Cliente table
+CREATE TABLE Cliente (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    legajo INT UNIQUE,
+    nombre VARCHAR(100),
+    tipo VARCHAR(50)
+);
 
-Tareas {
-	id integer pk increments
-	nombre varchar unique
-	tipo varchar unique
-}
+-- OrdenesDeCompra table
+CREATE TABLE OrdenesDeCompra (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    numeroOrdenInterna INT UNIQUE,
+    cliente_id INT,
+    numeroOrden INT,
+    descripcionTarea VARCHAR(255) NULL,
+    cuit_cuil VARCHAR(13),
+    fechaDeIngreso DATE,
+    caracter CHAR,
+    polizaArt INT,
+    vencimientoPolizaArt DATE,
+    polizaDeAccPer INT,
+    vencimientoPolizaDeAccPer DATE,
+    FOREIGN KEY (cliente_id) REFERENCES Cliente(id)
+);
 
-AusenciasPersonal {
-	id integer pk increments
-	tipo varchar unique
-	descripcion varchar null
-	fechaDeInicio timestamp
-	fechaDeFin timestamp
-	personal_id integer *> Personal.id
-}
+-- Tareas table
+CREATE TABLE Tareas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(255) UNIQUE,
+    tipo VARCHAR(255) UNIQUE
+);
 
-Gastos {
-	id integer pk increments
-	nombre varchar
-	tipo varchar
-	porcentajeIva float4
-}
+-- HorasPersonal table
+CREATE TABLE HorasPersonal (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fechaDeCarga DATE,
+    cliente_id INT,
+    personal_id INT,
+    orden_de_compra_id INT,
+    tarea_id INT,
+    FOREIGN KEY (cliente_id) REFERENCES Cliente(id),
+    FOREIGN KEY (personal_id) REFERENCES Personal(id),
+    FOREIGN KEY (orden_de_compra_id) REFERENCES OrdenesDeCompra(id),
+    FOREIGN KEY (tarea_id) REFERENCES Tareas(id)
+);
 
-Insumos {
-	id integer pk increments
-	nombre varchar(100)
-	tipo varchar(50)
-	precio float8
-	inventario integer
-	ultimaFechaPrecio integer
-}
+-- Proovedores table
+CREATE TABLE Proovedores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    legajo INT UNIQUE,
+    nombre VARCHAR(100) UNIQUE,
+    numeroDeTelefono INT,
+    cuil VARCHAR(13),
+    tipo VARCHAR(50),
+    fechaAlta DATE,
+    fechaBaja DATE NULL
+);
 
-TipoDeObra {
-	id integer pk increments
-	nombre varchar
-	tipo varchar
-	descripcion varchar null
-}
+-- AusenciasPersonal table
+CREATE TABLE AusenciasPersonal (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tipo VARCHAR(255) UNIQUE,
+    descripcion VARCHAR(255) NULL,
+    fechaDeInicio TIMESTAMP,
+    fechaDeFin TIMESTAMP,
+    personal_id INT,
+    FOREIGN KEY (personal_id) REFERENCES Personal(id)
+);
 
-Obra {
-	id integer pk increments
-	nombre varchar
-	legajo integer
-	id_cliente integer *> Cliente.id
-	id_insumosParaObra integer *>* InsumosParaObra.id
-	id_horasDePersonal integer *>* HorasPersonal.id
-}
+-- Gastos table
+CREATE TABLE Gastos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(255),
+    tipo VARCHAR(255),
+    porcentajeIva FLOAT(8, 2)
+);
 
-PresupuestoDeObra {
-	id integer pk increments
-	id_obra integer > Obra.id
-	nombre varchar
-	legajo integer
-	id_cliente integer *> Cliente.id
-	id_insumosParaObra integer *>* InsumosParaObra.id
-	id_horasDePersonal integer *>* HorasPersonal.id
-}
+-- Insumos table
+CREATE TABLE Insumos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100),
+    tipo VARCHAR(50),
+    precio DOUBLE(8, 2),
+    inventario INT,
+    ultimaFechaPrecio DATE
+);
 
-InsumosParaObra {
-	id integer pk increments
-	id_insumo integer > Insumos.id
-	cantidad integer
-}
+-- TipoDeObra table
+CREATE TABLE TipoDeObra (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(255),
+    tipo VARCHAR(255),
+    descripcion VARCHAR(255) NULL
+);
 
+-- InsumosParaObra table
+CREATE TABLE InsumosParaObra (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_insumo INT,
+    cantidad INT,
+    FOREIGN KEY (id_insumo) REFERENCES Insumos(id)
+);
+
+-- Obra table
+CREATE TABLE Obra (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(255),
+    legajo INT,
+    id_cliente INT,
+    id_insumosParaObra INT,
+    id_horasDePersonal INT,
+    FOREIGN KEY (id_cliente) REFERENCES Cliente(id),
+    FOREIGN KEY (id_insumosParaObra) REFERENCES InsumosParaObra(id),
+    FOREIGN KEY (id_horasDePersonal) REFERENCES HorasPersonal(id)
+);
+
+-- PresupuestoDeObra table
+CREATE TABLE PresupuestoDeObra (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_obra INT,
+    nombre VARCHAR(255),
+    legajo INT,
+    id_cliente INT,
+    id_insumosParaObra INT,
+    id_horasDePersonal INT,
+    FOREIGN KEY (id_obra) REFERENCES Obra(id),
+    FOREIGN KEY (id_cliente) REFERENCES Cliente(id),
+    FOREIGN KEY (id_insumosParaObra) REFERENCES InsumosParaObra(id),
+    FOREIGN KEY (id_horasDePersonal) REFERENCES HorasPersonal(id)
+);

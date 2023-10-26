@@ -1,123 +1,81 @@
-//create tareasController, based on TareasModel
+const pool = require('../config/db');
 
 class TareasController {
-    constructor() {
-        this.tareas = [];
+    constructor() {}
+
+    async getAllTareas(req, res) {
+        try {
+            const results = await pool.query('SELECT * FROM tareas');
+            return res.status(200).send({
+                success: 'true',
+                message: 'tareas retrieved successfully',
+                tareas: results,
+            });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
+        }
     }
 
-    // get all tareas
-    getAllTareas(req, res) {
-        return res.status(200).send({
-            success: 'true',
-            message: 'tareas retrieved successfully',
-            tareas: this.tareas,
-        });
-    }
-
-    // get a single tareas by id
-    getTareasById(req, res) {
-        const id = parseInt(req.params.id, 10);
-        this.tareas.map((tareas) => {
-            if (tareas.id === id) {
+    async getTareasById(req, res) {
+        try {
+            const id = parseInt(req.params.id, 10);
+            const [result] = await pool.query('SELECT * FROM tareas WHERE id = ?', [id]);
+            if (result.length > 0) {
                 return res.status(200).send({
                     success: 'true',
                     message: 'tareas retrieved successfully',
-                    tareas,
+                    tareas: result[0],
+                });
+            } else {
+                return res.status(404).send({
+                    success: 'false',
+                    message: 'tareas does not exist',
                 });
             }
-        });
-        return res.status(404).send({
-            success: 'false',
-            message: 'tareas does not exist',
-        });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
+        }
     }
 
-    // create a new tareas
-    createTareas(req, res) {
-        if (!req.body.nombre) {
-            return res.status(400).send({
-                success: 'false',
-                message: 'nombre is required',
+    async createTareas(req, res) {
+        try {
+            const { nombre, legajo, tipo } = req.body;
+            await pool.query('INSERT INTO tareas (nombre, legajo, tipo) VALUES (?, ?, ?)', [nombre, legajo, tipo]);
+            return res.status(201).send({
+                success: 'true',
+                message: 'tareas added successfully',
             });
-        } else if (!req.body.legajo) {
-            return res.status(400).send({
-                success: 'false',
-                message: 'legajo is required',
-            });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
         }
-        const tareas = new TareasModel(req.body.id, req.body.legajo, req.body.nombre, req.body.tipo);
-        this.tareas.push(tareas);
-        return res.status(201).send({
-            success: 'true',
-            message: 'tareas added successfully',
-            tareas,
-        });
     }
 
-    // update a tareas
-    updateTareas(req, res) {
-        const id = parseInt(req.params.id, 10);
-        let tareasFound;
-        let itemIndex;
-        this.tareas.map((tareas, index) => {
-            if (tareas.id === id) {
-                tareasFound = tareas;
-                itemIndex = index;
-            }
-        });
-
-        if (!tareasFound) {
-            return res.status(404).send({
-                success: 'false',
-                message: 'tareas not found',
+    async updateTareas(req, res) {
+        try {
+            const id = parseInt(req.params.id, 10);
+            const { nombre, legajo, tipo } = req.body;
+            await pool.query('UPDATE tareas SET nombre = ?, legajo = ?, tipo = ? WHERE id = ?', [nombre, legajo, tipo, id]);
+            return res.status(200).send({
+                success: 'true',
+                message: 'tareas updated successfully',
             });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
         }
-
-        if (!req.body.nombre) {
-            return res.status(400).send({
-                success: 'false',
-                message: 'nombre is required',
-            });
-        } else if (!req.body.legajo) {
-            return res.status(400).send({
-                success: 'false',
-                message: 'legajo is required',
-            });
-        }
-
-        const newTareas = {
-            id: tareasFound.id,
-            nombre: req.body.nombre || tareasFound.nombre,
-            legajo: req.body.legajo || tareasFound.legajo,
-        };
-
-        this.tareas.splice(itemIndex, 1, newTareas);
-
-        return res.status(201).send({
-            success: 'true',
-            message: 'tareas added successfully',
-            newTareas,
-        });
     }
 
-    // delete a tareas
-    deleteTareas(req, res) {
-        const id = parseInt(req.params.id, 10);
-        this.tareas.map((tareas, index) => {
-            if (tareas.id === id) {
-                this.tareas.splice(index, 1);
-                return res.status(200).send({
-                    success: 'true',
-                    message: 'tareas deleted successfuly',
-                });
-            }
-        });
-
-        return res.status(404).send({
-            success: 'false',
-            message: 'tareas not found',
-        });
+    async deleteTareas(req, res) {
+        try {
+            const id = parseInt(req.params.id, 10);
+            await pool.query('DELETE FROM tareas WHERE id = ?', [id]);
+            return res.status(200).send({
+                success: 'true',
+                message: 'tareas deleted successfully',
+            });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
+        }
     }
 }
 
-export default TareasController;
+module.exports = TareasController;

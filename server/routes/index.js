@@ -8,7 +8,7 @@ router.get('/', (req, res) => {
 
 //Redireccionar a la pagina de login
 router.get('/login', (req, res) => {
-    res.send('Login');
+    res.sendFile('login.html', { root: '../public' });
 });
 
 //Redireccionar a la pagina de agregado de personal

@@ -1,122 +1,82 @@
-import clienteModel from '../models/clienteModel';
+const ClienteModel = require('../models/ClienteModel');
+const pool = require('../config/db');
 
-class clienteController {
-     constructor() {
-         this.clientes = [];
-     }
- 
-      //get all clientes
-     getAllclientes(req, res) {
-         return res.status(200).send({
-             success: 'true',
-             message: 'clientes retrieved successfully',
-             clientes: this.clientes,
-         });
-     }
- 
-      //get a single cliente by id
-     getclienteById(req, res) {
-         const id = parseInt(req.params.id, 10);
-         this.clientes.map((cliente) => {
-             if (cliente.id === id) {
-                 return res.status(200).send({
-                     success: 'true',
-                     message: 'cliente retrieved successfully',
-                     cliente,
-                 });
-             }
-         });
-         return res.status(404).send({
-             success: 'false',
-             message: 'cliente does not exist',
-         });
-     }
- 
-      //create a new cliente
-     createcliente(req, res) {
-         if (!req.body.nombre) {
-             return res.status(400).send({
-                 success: 'false',
-                 message: 'nombre is required',
-             });
-         } else if (!req.body.legajo) {
-             return res.status(400).send({
-                 success: 'false',
-                 message: 'legajo is required',
-             });
-         }
-         const cliente = new clienteModel(req.body.id, req.body.legajo, req.body.nombre, req.body.tipo);
-         this.clientes.push(cliente);
-         return res.status(201).send({
-             success: 'true',
-             message: 'cliente added successfully',
-             cliente,
-         });
-     }
- 
-      //update a cliente
-     updatecliente(req, res) {
-         const id = parseInt(req.params.id, 10);
-         let clienteFound;
-         let itemIndex;
-         this.clientes.map((cliente, index) => {
-             if (cliente.id === id) {
-                 clienteFound = cliente;
-                 itemIndex = index;
-             }
-         });
- 
-         if (!clienteFound) {
-             return res.status(404).send({
-                 success: 'false',
-                 message: 'cliente not found',
-             });
-         }
-          
-         if (!req.body.nombre) {
-             return res.status(400).send({
-                 success: 'false',
-                 message: 'nombre is required',
-             });
-         } else if (!req.body.legajo) {
-             return res.status(400).send({
-                 success: 'false',
-                 message: 'legajo is required',
-             });
-         }
- 
-         const newcliente = {
-             id: clienteFound.id,
-             nombre: req.body.nombre || clienteFound.nombre,
-             legajo: req.body.legajo || clienteFound.legajo,
-         };
- 
-         this.clientes.splice(itemIndex, 1, newcliente);
- 
-         return res.status(201).send({
-             success: 'true',
-             message: 'cliente added successfully',
-             newcliente,
-         });
-        }
+class ClienteController {
+    constructor() {}
 
-        //delete a cliente
-        deletecliente(req, res) {
-            const id = parseInt(req.params.id, 10);
-            this.clientes.map((cliente, index) => {
-                if (cliente.id === id) {
-                    this.clientes.splice(index, 1);
-                    return res.status(200).send({
-                        success: 'true',
-                        message: 'cliente deleted successfuly',
-                    });
-                }
+    async getAllClientes(req, res) {
+        try {
+            const results = await pool.query('SELECT * FROM clientes');
+            return res.status(200).send({
+                success: 'true',
+                message: 'clientes retrieved successfully',
+                clientes: results,
             });
-            return res.status(404).send({
-                success: 'false',
-                message: 'cliente not found',
-            });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
         }
     }
 
-    export default clienteController;
+    async getClienteById(req, res) {
+        try {
+            const id = parseInt(req.params.id, 10);
+            const [result] = await pool.query('SELECT * FROM clientes WHERE id = ?', [id]);
+            if (result.length > 0) {
+                return res.status(200).send({
+                    success: 'true',
+                    message: 'cliente retrieved successfully',
+                    cliente: result[0],
+                });
+            } else {
+                return res.status(404).send({
+                    success: 'false',
+                    message: 'cliente does not exist',
+                });
+            }
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
+        }
+    }
+
+    async createCliente(req, res) {
+        try {
+            const { name, email, address } = req.body; // Adjust the destructuring based on your cliente model attributes
+            await pool.query('INSERT INTO clientes (name, email, address) VALUES (?, ?, ?)', [name, email, address]);
+            return res.status(201).send({
+                success: 'true',
+                message: 'cliente created successfully',
+            });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
+        }
+    }
+
+    async updateCliente(req, res) {
+        try {
+            const id = parseInt(req.params.id, 10);
+            const { name, email, address } = req.body;
+            await pool.query('UPDATE clientes SET name = ?, email = ?, address = ? WHERE id = ?', [name, email, address, id]);
+            return res.status(200).send({
+                success: 'true',
+                message: 'cliente updated successfully',
+            });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
+        }
+    }
+
+    async deleteCliente(req, res) {
+        try {
+            const id = parseInt(req.params.id, 10);
+            await pool.query('DELETE FROM clientes WHERE id = ?', [id]);
+            return res.status(200).send({
+                success: 'true',
+                message: 'cliente deleted successfully',
+            });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
+        }
+    }
+}
+
+module.exports = ClienteController;

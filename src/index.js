@@ -1,5 +1,6 @@
-import app from './app.js';
+// src/index.js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
 
-// starting the server
-app.listen(4000)
-console.log("Server on port", 4000) 
+ReactDOM.render(<App />, document.getElementById('root'));

@@ -1,128 +1,76 @@
-import PersonalModel from "../../models/personalModel";
-
-// create a personal controller, based on PersonalModel
+import pool from '../config/db.js';
 
 class PersonalController {
-    constructor() {
-        this.personal = [];
-    }
-
-    // get all personal
-    getAllPersonal(req, res) {
-        return res.status(200).send({
-            success: 'true',
-            message: 'personal retrieved successfully',
-            personal: this.personal,
-        });
-    }
-
-    // get a single personal by id
-    getPersonalById(req, res) {
-        const id = parseInt(req.params.id, 10);
-        this.personal.map((personal) => {
-            if (personal.id === id) {
-                return res.status(200).send({
-                    success: 'true',
-                    message: 'personal retrieved successfully',
-                    personal,
-                });
-            }
-        });
-        return res.status(404).send({
+    
+    // Get all personal
+    async getAllPersonal(req, res) {
+        try {
+            const result = await pool.query("SELECT * FROM personal");
+            return res.status(200).send({
+                success: 'true',
+                message: 'personal retrieved successfully',
+                personal: result.rows });
+        } catch (error) {
+            return res.status(500).send({ 
             success: 'false',
-            message: 'personal does not exist',
-        });
-    }
-
-    // create a new personal
-    createPersonal(req, res) {
-        if (!req.body.nombre) {
-            return res.status(400).send({
-                success: 'false',
-                message: 'nombre is required',
-            });
-        } else if (!req.body.legajo) {
-            return res.status(400).send({
-                success: 'false',
-                message: 'legajo is required',
-            });
+            message: error.message });
         }
-        const personal = new PersonalModel(req.body.id, req.body.legajo, req.body.nombre, req.body.salarioHora, req.body.estado, req.body.fechaDeAlta, req.body.fechaDeBaja);
-        this.personal.push(personal);
-        return res.status(201).send({
-            success: 'true',
-            message: 'personal added successfully',
-            personal,
-        });
     }
 
-    // update a personal
-    updatePersonal(req, res) {
-        const id = parseInt(req.params.id, 10);
-        let personalFound;
-        let itemIndex;
-        this.personal.map((personal, index) => {
-            if (personal.id === id) {
-                personalFound = personal;
-                itemIndex = index;
+    // Get a single personal by id
+    async getPersonalById(req, res) {
+        try {
+            const result = await pool.query("SELECT * FROM personal WHERE id = $1", [req.params.id]);
+            if (result.rows.length) {
+                return res.status(200).send({ success: 'true', message: 'personal retrieved successfully', personal: result.rows[0] });
+            } else {
+                return res.status(404).send({ success: 'false', message: 'personal does not exist' });
             }
-        });
-
-        if (!personalFound) {
-            return res.status(404).send({
-                success: 'false',
-                message: 'personal not found',
-            });
+        } catch (error) {
+            return res.status(500).send({ success: 'false', message: error.message });
         }
-
-        if (!req.body.nombre) {
-            return res.status(400).send({
-                success: 'false',
-                message: 'nombre is required',
-            });
-        } else if (!req.body.legajo) {
-            return res.status(400).send({
-                success: 'false',
-                message: 'legajo is required',
-            });
-        }
-
-        const newPersonal = {
-            id: personalFound.id,
-            legajo: req.body.legajo || personalFound.legajo,
-            nombre: req.body.nombre || personalFound.nombre,
-            salarioHora: req.body.salarioHora || personalFound.salarioHora,
-            estado: req.body.estado || personalFound.estado,
-            fechaDeAlta: req.body.fechaDeAlta || personalFound.fechaDeAlta,
-            fechaDeBaja: req.body.fechaDeBaja || personalFound.fechaDeBaja,
-        };
-
-        this.personal.splice(itemIndex, 1, newPersonal);
-
-        return res.status(201).send({
-            success: 'true',
-            message: 'personal added successfully',
-            newPersonal,
-        });
     }
 
-    // delete a personal
-    deletePersonal(req, res) {
-        const id = parseInt(req.params.id, 10);
-        this.personal.map((personal, index) => {
-            if (personal.id === id) {
-                this.personal.splice(index, 1);
-                return res.status(200).send({
-                    success: 'true',
-                    message: 'personal deleted successfuly',
-                });
-            }
-        });
+    // Create a new personal
+    async createPersonal(req, res) {
+        const { id, legajo, nombre, salarioHora, estado, fechaDeAlta, fechaDeBaja } = req.body;
+        try {
+            await pool.query("INSERT INTO personal (id, legajo, nombre, salarioHora, estado, fechaDeAlta, fechaDeBaja) VALUES ($1, $2, $3, $4, $5, $6, $7)", [id, legajo, nombre, salarioHora, estado, fechaDeAlta, fechaDeBaja]);
+            return res.status(201).send({ success: 'true', message: 'personal added successfully' });
+        } catch (error) {
+            return res.status(500).send({ success: 'false', message: error.message });
+        }
+    }
 
-        return res.status(404).send({
-            success: 'false',
-            message: 'personal not found',
-        });
+    // Update a personal
+    async updatePersonal(req, res) {
+        const { id } = req.params;
+        const { legajo, nombre, salarioHora, estado, fechaDeAlta, fechaDeBaja } = req.body;
+        try {
+            const result = await pool.query("UPDATE personal SET legajo = $2, nombre = $3, salarioHora = $4, estado = $5, fechaDeAlta = $6, fechaDeBaja = $7 WHERE id = $1", [id, legajo, nombre, salarioHora, estado, fechaDeAlta, fechaDeBaja]);
+            if (result.rowCount) {
+                return res.status(201).send({ success: 'true', message: 'personal updated successfully' });
+            } else {
+                return res.status(404).send({ success: 'false', message: 'personal not found' });
+            }
+        } catch (error) {
+            return res.status(500).send({ success: 'false', message: error.message });
+        }
+    }
+
+    // Delete a personal
+    async deletePersonal(req, res) {
+        const { id } = req.params;
+        try {
+            const result = await pool.query("DELETE FROM personal WHERE id = $1", [id]);
+            if (result.rowCount) {
+                return res.status(200).send({ success: 'true', message: 'personal deleted successfully' });
+            } else {
+                return res.status(404).send({ success: 'false', message: 'personal not found' });
+            }
+        } catch (error) {
+            return res.status(500).send({ success: 'false', message: error.message });
+        }
     }
 }
 

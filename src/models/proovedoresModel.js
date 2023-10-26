@@ -10,5 +10,4 @@ class ProovedoresModel {
         this.fechaBaja = fechaBaja;
     }
 }
-
 export default ProovedoresModel;

@@ -1,11 +1,11 @@
-import { Pool } from pg;
+const mysql = require('mysql');
 
-const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'BasisConstrucciones-test',
-    password: 'admin',
-    port: 5432,
+const pool = mysql.createPool({
+  connectionLimit: 10, // Number of connections to keep in the pool. Adjust based on your needs.
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'defaultUser',
+  password: process.env.DB_PASSWORD || 'defaultPassword',
+  database: process.env.DB_NAME || 'defaultDB',
 });
 
-export default pool;
+module.exports = pool;

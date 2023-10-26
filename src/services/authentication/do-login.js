@@ -1,11 +1,15 @@
-const { password } = require('./credentials.json');
+const User = require('../../models/userModel');
 
-module.exports = (req, res) => {
-  const { password: postedPassword } = req.body;
-  if (postedPassword === password) {
-    const oneDay = 60 * 60 * 24 * 1000;
-    res.cookie('password', password, { maxAge: oneDay });
-    return true;
-  }
-  return false;
+module.exports = async (req, res) => {
+    const { username, password: postedPassword } = req.body;
+    
+    // Find user by username
+    const user = await User.findOne({ where: { username } });
+    
+    if (user && user.password === postedPassword) {
+        const oneDay = 60 * 60 * 24 * 1000;
+        res.cookie('userId', user.id, { maxAge: oneDay });
+        return true;
+    }
+    return false;
 };

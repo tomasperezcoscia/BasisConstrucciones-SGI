@@ -1,105 +1,82 @@
-//Crear insumosController, basado en insumosModel
-
 const insumosModel = require('../models/insumosModel');
+const pool = require('../config/db');
 
 class insumosController {
-    constructor() {
-        this.insumos = [];
+    constructor() {}
+
+    async getAllInsumos(req, res) {
+        try {
+            const results = await pool.query('SELECT * FROM insumos');
+            return res.status(200).send({
+                success: 'true',
+                message: 'insumos retrieved successfully',
+                insumos: results,
+            });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
+        }
     }
 
-    //get all insumoss
-    getAllinsumoss(req, res) {
-        return res.status(200).send({
-            success: 'true',
-            message: 'insumoss retrieved successfully',
-            insumoss: this.insumoss,
-        });
-    }
-
-    //get a single insumos by id
-    getinsumosById(req, res) {
-        const id = parseInt(req.params.id, 10);
-        this.insumoss.map((insumos) => {
-            if (insumos.id === id) {
+    async getInsumosById(req, res) {
+        try {
+            const id = parseInt(req.params.id, 10);
+            const [result] = await pool.query('SELECT * FROM insumos WHERE id = ?', [id]);
+            if (result.length > 0) {
                 return res.status(200).send({
                     success: 'true',
                     message: 'insumos retrieved successfully',
-                    insumos,
+                    insumos: result[0],
+                });
+            } else {
+                return res.status(404).send({
+                    success: 'false',
+                    message: 'insumos does not exist',
                 });
             }
-        });
-        return res.status(404).send({
-            success: 'false',
-            message: 'insumos does not exist',
-        });
-    }
-
-    //create a new insumos
-    createinsumos(req, res) {
-        if (!req.body.nombre) {
-            return res.status(400).send({
-                success: 'false',
-                message: 'nombre is required',
-            });
-        } else if (!req.body.legajo) {
-            return res.status(400).send({
-                success: 'false',
-                message: 'legajo is required',
-            });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
         }
-        const insumos = new insumosModel(req.body.id, req.body.legajo, req.body.nombre, req.body.tipo);
-        this.insumoss.push(insumos);
-        return res.status(201).send({
-            success: 'true',
-            message: 'insumos added successfully',
-            insumos,
-        });
     }
 
-    //update a insumos
-    updateinsumos(req, res) {
-        const id = parseInt(req.params.id, 10);
-        let insumosFound;
-        const insumosToUpdate = this.insumoss.map((insumos) => {
-            if (insumos.id === id) {
-                insumosFound = insumos;
-                insumos.nombre = req.body.nombre || insumos.nombre;
-                insumos.legajo = req.body.legajo || insumos.legajo;
-                insumos.tipo = req.body.tipo || insumos.tipo;
-            }
-            return insumos;
-        });
-        if (!insumosFound) {
-            return res.status(404).send({
-                success: 'false',
-                message: 'insumos not found',
+    async createInsumos(req, res) {
+        try {
+            const { name, description, quantity } = req.body; // Adjust the destructuring based on your insumos model
+            await pool.query('INSERT INTO insumos (name, description, quantity) VALUES (?, ?, ?)', [name, description, quantity]);
+            return res.status(201).send({
+                success: 'true',
+                message: 'insumo created successfully',
             });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
         }
-        this.insumoss = insumosToUpdate;
-        return res.status(201).send({
-            success: 'true',
-            message: 'insumos added successfully',
-            insumosToUpdate,
-        });
     }
 
-    //delete a insumos
-    deleteinsumos(req, res) {
-        const id = parseInt(req.params.id, 10);
-        this.insumoss.map((insumos, index) => {
-            if (insumos.id === id) {
-                this.insumoss.splice(index, 1);
-                return res.status(200).send({
-                    success: 'true',
-                    message: 'insumos deleted successfuly',
-                });
-            }
-        });
-        return res.status(404).send({
-            success: 'false',
-            message: 'insumos not found',
-        });
+    async updateInsumos(req, res) {
+        try {
+            const id = parseInt(req.params.id, 10);
+            const { name, description, quantity } = req.body;
+            await pool.query('UPDATE insumos SET name = ?, description = ?, quantity = ? WHERE id = ?', [name, description, quantity, id]);
+            return res.status(200).send({
+                success: 'true',
+                message: 'insumo updated successfully',
+            });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
+        }
+    }
+
+    async deleteInsumos(req, res) {
+        try {
+            const id = parseInt(req.params.id, 10);
+            await pool.query('DELETE FROM insumos WHERE id = ?', [id]);
+            return res.status(200).send({
+                success: 'true',
+                message: 'insumo deleted successfully',
+            });
+        } catch (error) {
+            res.status(500).send({ message: 'Database error' });
+        }
     }
 }
 
-export default insumosController;
+module.exports = insumosController;
